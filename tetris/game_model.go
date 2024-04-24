@@ -29,7 +29,16 @@ func (m GameModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "h", "left":
+			m.game.Act(ActionLeft)
+		case "l", "right":
+			m.game.Act(ActionRight)
+		}
+	}
 	return m, nil
 }
 

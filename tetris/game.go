@@ -18,7 +18,7 @@ func makeBoard(height, width int) [][]int {
 	return board
 }
 
-func (g *Game) NewPiece() {
+func (g *Game) SetRandomPiece() {
 	g.piece = RandomPiece()
 	g.pos = Vector{x: int(g.width / 2), y: 0 - g.piece.YOffset()}
 }
@@ -33,7 +33,7 @@ func NewGame(height, width int, piece Piece) Game {
 		board:  board,
 	}
 
-	g.NewPiece()
+	g.SetRandomPiece()
 	return g
 }
 
@@ -80,16 +80,41 @@ func (g Game) GetBoard() [][]int {
 	return b
 }
 
+// Would any new positions in the shape blocks become out of bounds?
+func (g *Game) moveIfPossible(direction Vector) bool {
+	for _, s := range g.piece.shape {
+		newPos := g.pos.Add(s).Add(direction)
+		if c, inBounds := g.colorAt(newPos); !inBounds || c > 0 {
+			return false
+		}
+	}
+
+	g.pos = g.pos.Add(direction)
+	return true
+}
+
+func (g *Game) Fall() { // This should be different than the user's "down" action
+	// TODO: detect lines and compact
+	// TODO: Score
+}
+
 type Action int
 
 const (
 	ActionLeft Action = iota
 	ActionRight
-	ActionFall
-	// ActionRotate
+	ActionDown
+	ActionRotate
+	ActionRotateBack
 )
 
 func (g *Game) Act(a Action) {
+	switch a {
+	case ActionRight:
+		g.moveIfPossible(Vector{1, 0})
+	case ActionLeft:
+		g.moveIfPossible(Vector{-1, 0})
+	}
 }
 
 // func (b BoardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {}

@@ -36,7 +36,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.game, cmd = m.game.Update(msg)
+	return m, cmd
 }
 
 func (m Model) View() string {
