@@ -2,10 +2,19 @@ package tetris
 
 import (
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+type FallMsg struct{}
+
+func FallTickCmd() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return FallMsg{}
+	})
+}
 
 type GameModel struct {
 	filledStyle lipgloss.Style
@@ -30,7 +39,14 @@ func (m GameModel) Init() tea.Cmd {
 }
 
 func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
+	case FallMsg:
+		m.game.Fall()
+		if m.game.GameOver {
+			cmd = tea.Quit
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "h", "left":
@@ -39,11 +55,12 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 			m.game.Act(ActionRight)
 		case "j", "down":
 			m.game.Act(ActionDown)
-		case "k", "up":
+		case "k", "r", "up":
 			m.game.Act(ActionRotate)
 		}
 	}
-	return m, nil
+
+	return m, cmd
 }
 
 func (m GameModel) View() string {

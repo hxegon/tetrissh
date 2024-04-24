@@ -3,11 +3,12 @@ package tetris
 /* The tetris game should work basically like a state machine. */
 
 type Game struct {
-	board  [][]int
-	piece  Piece
-	pos    Vector
-	height int
-	width  int
+	board    [][]int
+	piece    Piece
+	pos      Vector
+	height   int
+	width    int
+	GameOver bool
 }
 
 func makeBoard(height, width int) [][]int {
@@ -18,9 +19,19 @@ func makeBoard(height, width int) [][]int {
 	return board
 }
 
-func (g *Game) SetRandomPiece() {
-	g.piece = RandomPiece()
-	g.pos = Vector{x: int(g.width / 2), y: 0 - g.piece.YOffset()}
+// Returns false if there wasn't room for another piece
+func (g *Game) NextPieceIfPossible() bool {
+	p := RandomPiece()
+	g.pos = Vector{x: int(g.width / 2), y: 0 - p.YOffset()}
+
+	for _, b := range p.shape {
+		if c, ok := g.colorAt(g.pos.Add(b)); !ok || c > 0 {
+			return false
+		}
+	}
+
+	g.piece = p
+	return true
 }
 
 func NewGame(height, width int, piece Piece) Game {
@@ -28,12 +39,13 @@ func NewGame(height, width int, piece Piece) Game {
 	board := makeBoard(height, width)
 
 	g := Game{
-		height: height,
-		width:  width,
-		board:  board,
+		height:   height,
+		width:    width,
+		board:    board,
+		GameOver: false,
 	}
 
-	g.SetRandomPiece()
+	g.NextPieceIfPossible()
 	return g
 }
 
@@ -106,7 +118,45 @@ func (g *Game) rotateIfPossible() bool {
 	return true
 }
 
+func (g *Game) CompactLines() {
+	var broken bool
+	completedLines := 0
+
+	for y := range g.board {
+		broken = false
+		for x := range g.board[y] {
+			if c, _ := g.colorAt(Vector{x, y}); c == 0 {
+				// if g.board[y][x] == 0 { // If there are any empty blocks, then that line is not finished
+				broken = true
+				break
+			}
+		}
+
+		if !broken { // Line is complete
+			completedLines++
+
+			// move above lines down
+			for i := y; i > 0; i-- {
+				copy(g.board[i], g.board[i-1])
+			}
+
+			// add a new line to top
+			g.board[0] = make([]int, len(g.board[0]))
+		}
+	}
+}
+
 func (g *Game) Fall() { // This should be different than the user's "down" action
+	moved := g.moveIfPossible(Vector{0, 1})
+
+	if !moved { // Then we've reached the bottom
+		g.board = g.GetBoard()
+		g.CompactLines()
+		if !g.NextPieceIfPossible() {
+			g.GameOver = true
+		}
+	}
+
 	// TODO: detect lines and compact
 	// TODO: Score
 }

@@ -17,11 +17,16 @@ type Model struct {
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return tetris.FallTickCmd()
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
+	case tetris.FallMsg:
+		m.game, cmd = m.game.Update(msg)
+		return m, tea.Batch(cmd, tetris.FallTickCmd())
 	case tea.WindowSizeMsg:
 		h := msg.Height
 		v := msg.Width
@@ -36,7 +41,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	var cmd tea.Cmd
 	m.game, cmd = m.game.Update(msg)
 	return m, cmd
 }
