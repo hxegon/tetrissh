@@ -18,20 +18,23 @@ func makeBoard(height, width int) [][]int {
 	return board
 }
 
+func (g *Game) NewPiece() {
+	g.piece = RandomPiece()
+	g.pos = Vector{x: int(g.width / 2), y: 0 - g.piece.YOffset()}
+}
+
 func NewGame(height, width int, piece Piece) Game {
 	// Initialize board
 	board := makeBoard(height, width)
 
-	// TODO: offset initial pos so no piece block is OOB
-	pos := Vector{x: int(width / 2), y: 0}
-
-	return Game{
+	g := Game{
 		height: height,
 		width:  width,
-		pos:    pos,
 		board:  board,
-		piece:  piece,
 	}
+
+	g.NewPiece()
+	return g
 }
 
 func (g Game) isInBounds(v Vector) bool {

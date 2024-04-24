@@ -15,7 +15,7 @@ type GameModel struct {
 
 func NewGameModel() GameModel {
 	return GameModel{
-		game: NewGame(20, 10, TestShape()),
+		game: NewGame(20, 10, RandomPiece()),
 		emptyStyle: lipgloss.NewStyle().
 			Background(lipgloss.Color("240")).
 			Foreground(lipgloss.Color("238")),

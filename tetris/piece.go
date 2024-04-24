@@ -1,5 +1,7 @@
 package tetris
 
+import "math/rand"
+
 type Piece struct {
 	shape     []Vector
 	color     int
@@ -19,15 +21,23 @@ var Pieces = []Piece{
 	},
 }
 
-func TestShape() Piece {
-	return Piece{
-		color:     1,
-		canRotate: false,
-		shape:     []Vector{{0, 0}},
+func RandomPiece() Piece {
+	idx := rand.Intn(len(Pieces))
+	return Pieces[idx]
+}
+
+func (p Piece) YOffset() int {
+	offset := 0
+
+	for _, v := range p.shape {
+		if v.y < offset {
+			offset = v.y
+		}
 	}
+
+	return offset
 }
 
 // func NewRandomPiece() Piece {}
-// func (p *Piece) YOffset() int {}
 // func (p *Piece) Rotate() {}
 // func (p *Piece) RotateBack() {}
