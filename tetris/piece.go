@@ -1,6 +1,9 @@
 package tetris
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+)
 
 type Piece struct {
 	shape     []Vector
@@ -63,6 +66,32 @@ func (p Piece) YOffset() int {
 	return offset
 }
 
-// func NewRandomPiece() Piece {}
-// func (p *Piece) Rotate() {}
-// func (p *Piece) RotateBack() {}
+func (p Piece) Copy() Piece {
+	newP := Piece{
+		color:     p.color,
+		canRotate: p.canRotate,
+		shape:     make([]Vector, len(p.shape)),
+	}
+
+	copy(newP.shape, p.shape)
+
+	return newP
+}
+
+func (p Piece) Rotate() Piece {
+	newP := p.Copy()
+
+	// idk trig I just copy paste grug
+	ang := math.Pi / 2
+	cos := int(math.Round(math.Cos(ang)))
+	sin := int(math.Round(math.Sin(ang)))
+
+	for i, block := range p.shape {
+		nx := block.y*sin - block.x*cos
+		ny := block.y*cos - block.x*sin
+
+		newP.shape[i] = Vector{nx, ny}
+	}
+
+	return newP
+}

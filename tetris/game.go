@@ -93,6 +93,19 @@ func (g *Game) moveIfPossible(direction Vector) bool {
 	return true
 }
 
+// argument is true for clockwise, false for counterclockwise. Returns true if it rotated, false if it couldn't
+func (g *Game) rotateIfPossible() bool {
+	newPiece := g.piece.Rotate()
+	for _, s := range newPiece.shape {
+		if c, ok := g.colorAt(g.pos.Add(s)); !ok || c > 0 {
+			return false
+		}
+	}
+
+	g.piece = newPiece
+	return true
+}
+
 func (g *Game) Fall() { // This should be different than the user's "down" action
 	// TODO: detect lines and compact
 	// TODO: Score
@@ -116,6 +129,8 @@ func (g *Game) Act(a Action) {
 		g.moveIfPossible(Vector{-1, 0})
 	case ActionDown:
 		g.moveIfPossible(Vector{0, 1})
+	case ActionRotate:
+		g.rotateIfPossible()
 	}
 }
 
