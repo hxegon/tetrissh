@@ -9,15 +9,40 @@ type Piece struct {
 }
 
 var Pieces = []Piece{
-	{ // unit block for testing
+	{ // Block
 		color:     1,
 		canRotate: false,
-		shape:     []Vector{{0, 0}},
+		shape:     []Vector{{0, 0}, {1, 0}, {0, 1}, {1, 1}},
 	},
 	{ // Line
 		color:     1,
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {0, -1}, {0, 1}, {0, 2}},
+	},
+	{ // L
+		color:     1,
+		canRotate: true,
+		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {-1, 2}},
+	},
+	{ // J
+		color:     1,
+		canRotate: true,
+		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {1, 2}},
+	},
+	{ // T
+		color:     1,
+		canRotate: true,
+		shape:     []Vector{{0, 0}, {-1, 0}, {1, 0}, {0, 1}},
+	},
+	{ // Z
+		color:     1,
+		canRotate: true,
+		shape:     []Vector{{0, 0}, {-1, 0}, {0, 1}, {1, 1}},
+	},
+	{ // S
+		color:     1,
+		canRotate: true,
+		shape:     []Vector{{0, 0}, {1, 0}, {0, 1}, {-1, 1}},
 	},
 }
 
