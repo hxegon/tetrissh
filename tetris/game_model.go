@@ -37,6 +37,8 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 			m.game.Act(ActionLeft)
 		case "l", "right":
 			m.game.Act(ActionRight)
+		case "j", "down":
+			m.game.Act(ActionDown)
 		}
 	}
 	return m, nil

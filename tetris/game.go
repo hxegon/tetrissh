@@ -114,6 +114,8 @@ func (g *Game) Act(a Action) {
 		g.moveIfPossible(Vector{1, 0})
 	case ActionLeft:
 		g.moveIfPossible(Vector{-1, 0})
+	case ActionDown:
+		g.moveIfPossible(Vector{0, 1})
 	}
 }
 
