@@ -156,9 +156,17 @@ func (g *Game) Fall() { // This should be different than the user's "down" actio
 			g.GameOver = true
 		}
 	}
-
-	// TODO: detect lines and compact
 	// TODO: Score
+}
+
+// Instantly fall
+func (g *Game) Drop() {
+	for {
+		if !g.moveIfPossible(Vector{0, 1}) {
+			g.Fall()
+			break
+		}
+	}
 }
 
 type Action int
@@ -168,7 +176,7 @@ const (
 	ActionRight
 	ActionDown
 	ActionRotate
-	ActionRotateBack
+	ActionDrop
 )
 
 func (g *Game) Act(a Action) {
@@ -181,6 +189,8 @@ func (g *Game) Act(a Action) {
 		g.moveIfPossible(Vector{0, 1})
 	case ActionRotate:
 		g.rotateIfPossible()
+	case ActionDrop:
+		g.Drop()
 	}
 }
 

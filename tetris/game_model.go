@@ -57,6 +57,8 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 			m.game.Act(ActionDown)
 		case "k", "r", "up":
 			m.game.Act(ActionRotate)
+		case " ":
+			m.game.Act(ActionDrop)
 		}
 	}
 
