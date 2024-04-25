@@ -23,16 +23,17 @@ func makeBoard(height, width int) [][]int {
 
 // Returns false if there wasn't room for another piece
 func (g *Game) NextPieceIfPossible() bool {
-	p := RandomPiece()
-	g.pos = Vector{x: int(g.width / 2), y: 0 - p.YOffset()}
+	piece := RandomPiece()
+	pos := Vector{x: int(g.width / 2), y: 0 - piece.YOffset()}
 
-	for _, b := range p.shape {
-		if c, ok := g.colorAt(g.pos.Add(b)); !ok || c > 0 {
+	for _, b := range piece.shape {
+		if c, ok := g.colorAt(pos.Add(b)); !ok || c > 0 {
 			return false
 		}
 	}
 
-	g.piece = p
+	g.pos = pos
+	g.piece = piece
 	return true
 }
 
