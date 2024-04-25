@@ -123,7 +123,7 @@ func (m GameModel) View() string {
 		}
 	}
 
-	board := sb.String()
 	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.score))
+	board := sb.String()
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }

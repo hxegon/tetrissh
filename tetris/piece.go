@@ -40,12 +40,12 @@ var Pieces = []Piece{
 	{ // L
 		color:     int(ColorGreen),
 		canRotate: true,
-		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {-1, 2}},
+		shape:     []Vector{{0, -1}, {0, 0}, {0, 1}, {-1, 1}},
 	},
 	{ // J
 		color:     int(ColorBlue),
 		canRotate: true,
-		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {1, 2}},
+		shape:     []Vector{{0, -1}, {0, 0}, {0, 1}, {1, 1}},
 	},
 	{ // T
 		color:     int(ColorPurple),
