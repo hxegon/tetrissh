@@ -11,39 +11,54 @@ type Piece struct {
 	canRotate bool
 }
 
+type Color int
+
+const (
+	ColorEmpty Color = iota
+	ColorGreen
+	ColorYellow
+	ColorRed
+	ColorPurple
+	ColorOrange
+	ColorBlue
+)
+
+// Color is 0 for empty, or one of the 256 terminal colors
+// Shouldn't this be a uint8 then? nah cause I might also make this
+// a hex color code or change how this is implemented more later so nahhhh
 var Pieces = []Piece{
 	{ // Block
-		color:     1,
+		color:     int(ColorYellow),
 		canRotate: false,
 		shape:     []Vector{{0, 0}, {1, 0}, {0, 1}, {1, 1}},
 	},
 	{ // Line
-		color:     1,
+		color:     int(ColorBlue),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {0, -1}, {0, 1}, {0, 2}},
 	},
 	{ // L
-		color:     1,
+		color:     int(ColorGreen),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {-1, 2}},
 	},
 	{ // J
-		color:     1,
+		color:     int(ColorBlue),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {0, 1}, {0, 2}, {1, 2}},
 	},
 	{ // T
-		color:     1,
+		color:     int(ColorPurple),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {-1, 0}, {1, 0}, {0, 1}},
 	},
 	{ // Z
-		color:     1,
+		color:     int(ColorRed),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {-1, 0}, {0, 1}, {1, 1}},
 	},
 	{ // S
-		color:     1,
+		color:     int(ColorOrange),
 		canRotate: true,
 		shape:     []Vector{{0, 0}, {1, 0}, {0, 1}, {-1, 1}},
 	},

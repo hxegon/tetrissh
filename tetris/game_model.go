@@ -24,13 +24,9 @@ type GameModel struct {
 
 func NewGameModel() GameModel {
 	return GameModel{
-		game: NewGame(20, 10, RandomPiece()),
-		emptyStyle: lipgloss.NewStyle().
-			Background(lipgloss.Color("240")).
-			Foreground(lipgloss.Color("238")),
-		filledStyle: lipgloss.NewStyle().
-			Background(lipgloss.Color("240")).
-			Foreground(lipgloss.Color("112")),
+		game:        NewGame(20, 10, RandomPiece()),
+		emptyStyle:  lipgloss.NewStyle().Background(lipgloss.Color("233")),
+		filledStyle: lipgloss.NewStyle().Background(lipgloss.Color("240")),
 	}
 }
 
@@ -65,6 +61,31 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	return m, cmd
 }
 
+func toColor(ci int) lipgloss.Color {
+	c := Color(ci)
+	var code string
+
+	switch c {
+	case ColorEmpty:
+		code = "240"
+	case ColorRed:
+		code = "001"
+	case ColorBlue:
+		code = "004"
+	case ColorGreen:
+		code = "002"
+	case ColorOrange:
+		code = "202"
+	case ColorPurple:
+		code = "129"
+	case ColorYellow:
+		code = "011"
+	default:
+		panic("Trying to convert an int to a color but there were no matching colors")
+	}
+	return lipgloss.Color(code)
+}
+
 func (m GameModel) View() string {
 	var sb strings.Builder
 
@@ -72,10 +93,12 @@ func (m GameModel) View() string {
 
 	for y := range b {
 		for x := range b[y] {
-			if b[y][x] == 0 {
-				sb.WriteString(m.emptyStyle.Render("░░"))
+			val := b[y][x]
+			color := lipgloss.Color(toColor(val))
+			if val == 0 {
+				sb.WriteString(m.emptyStyle.Foreground(color).Render("░░"))
 			} else {
-				sb.WriteString(m.filledStyle.Render("🮑🮒"))
+				sb.WriteString(m.filledStyle.Foreground(color).Render("🮑🮒"))
 			}
 		}
 
