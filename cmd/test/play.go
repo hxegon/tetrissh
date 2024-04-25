@@ -20,6 +20,8 @@ func (m Model) Init() tea.Cmd {
 	return tetris.FallTickCmd()
 }
 
+var score int
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
@@ -39,6 +41,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
+	case tetris.GameOverMsg:
+		score = msg.Score
+		return m, tea.Quit
 	}
 
 	m.game, cmd = m.game.Update(msg)
@@ -67,4 +72,6 @@ func main() {
 		fmt.Printf("Error entcountered: %v", err)
 		os.Exit(1)
 	}
+
+	fmt.Printf("Your score was %v!", score)
 }

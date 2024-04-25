@@ -10,6 +10,7 @@ type Game struct {
 	pos      Vector
 	height   int
 	width    int
+	score    int
 	GameOver bool
 }
 
@@ -122,6 +123,7 @@ func (g *Game) rotateIfPossible() bool {
 	return true
 }
 
+// TODO: Make this return the number of completed lines, use this for score externally instead
 func (g *Game) CompactLines() {
 	var broken bool
 	completedLines := 0
@@ -130,7 +132,6 @@ func (g *Game) CompactLines() {
 		broken = false
 		for x := range g.board[y] {
 			if c, _ := g.colorAt(Vector{x, y}); c == 0 {
-				// if g.board[y][x] == 0 { // If there are any empty blocks, then that line is not finished
 				broken = true
 				break
 			}
@@ -148,9 +149,11 @@ func (g *Game) CompactLines() {
 			g.board[0] = make([]int, len(g.board[0]))
 		}
 	}
+
+	g.score += (2 ^ completedLines*100)
 }
 
-func (g *Game) Fall() { // This should be different than the user's "down" action
+func (g *Game) Fall() { // Maybe this should return score as well? idk
 	moved := g.moveIfPossible(Vector{0, 1})
 
 	if !moved { // Then we've reached the bottom
@@ -160,7 +163,6 @@ func (g *Game) Fall() { // This should be different than the user's "down" actio
 			g.GameOver = true
 		}
 	}
-	// TODO: Score
 }
 
 // Instantly fall

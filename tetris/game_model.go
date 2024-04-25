@@ -1,6 +1,7 @@
 package tetris
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -16,9 +17,20 @@ func FallTickCmd() tea.Cmd {
 	})
 }
 
+type GameOverMsg struct {
+	Score int
+}
+
+func GameOverCmd(score int) tea.Cmd {
+	return func() tea.Msg {
+		return GameOverMsg{Score: score}
+	}
+}
+
 type GameModel struct {
 	filledStyle lipgloss.Style
 	emptyStyle  lipgloss.Style
+	scoreStyle  lipgloss.Style
 	game        Game
 }
 
@@ -27,6 +39,10 @@ func NewGameModel() GameModel {
 		game:        NewGame(20, 10, RandomPiece()),
 		emptyStyle:  lipgloss.NewStyle().Background(lipgloss.Color("233")),
 		filledStyle: lipgloss.NewStyle().Background(lipgloss.Color("240")),
+		scoreStyle: lipgloss.NewStyle().
+			Width(18).
+			Border(lipgloss.NormalBorder(), true).
+			AlignHorizontal(lipgloss.Center),
 	}
 }
 
@@ -41,7 +57,7 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	case FallMsg:
 		m.game.Fall()
 		if m.game.GameOver {
-			cmd = tea.Quit
+			cmd = GameOverCmd(m.game.score)
 		}
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -107,5 +123,7 @@ func (m GameModel) View() string {
 		}
 	}
 
-	return sb.String()
+	board := sb.String()
+	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.score))
+	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }
