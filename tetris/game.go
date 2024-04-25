@@ -1,5 +1,7 @@
 package tetris
 
+import "fmt"
+
 /* The tetris game should work basically like a state machine. */
 
 type Game struct {
@@ -83,7 +85,8 @@ func (g Game) GetBoard() [][]int {
 
 		// Should never happen because bounds checks exist everywhere piece is moved/placed
 		if !g.isInBounds(pos) {
-			panic("Tried to get a tetris board with an active piece that's out of bounds. This should never happen!")
+			msg := fmt.Sprintf("Tried to GetBoard() with a piece shape block that's out of bounds. Pos: %v, Shape: %v", g.pos, g.piece.shape)
+			panic(msg)
 		}
 
 		b[pos.y][pos.x] = g.piece.color
