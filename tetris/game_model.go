@@ -47,7 +47,7 @@ func NewGameModel() GameModel {
 }
 
 func (m GameModel) Init() tea.Cmd {
-	return nil
+	return FallTickCmd()
 }
 
 func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -57,7 +57,7 @@ func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case FallMsg:
 		m.game.Fall()
 		if m.game.GameOver {
-			cmd = GameOverCmd(m.game.score)
+			cmd = GameOverCmd(m.game.Score)
 		} else {
 			cmd = FallTickCmd()
 		}
@@ -125,7 +125,7 @@ func (m GameModel) View() string {
 		}
 	}
 
-	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.score))
+	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.Score))
 	board := sb.String()
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }

@@ -10,7 +10,7 @@ type Game struct {
 	pos      Vector
 	height   int
 	width    int
-	score    int
+	Score    int
 	GameOver bool
 }
 
@@ -156,7 +156,7 @@ func (g *Game) CompactLines() {
 		}
 	}
 
-	g.score += (2 ^ completedLines*100)
+	g.Score += (2 ^ completedLines*100)
 }
 
 func (g *Game) Fall() { // Maybe this should return score as well? idk

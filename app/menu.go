@@ -1,16 +1,13 @@
 package app
 
 import (
-	"tetrissh/tetris"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type ModeActivateMsg struct {
-	newModel tea.Model
-	cmd      tea.Cmd
+type MenuSelectMsg struct {
+	model tea.Model
 }
 
 type MenuItem struct {
@@ -24,13 +21,9 @@ func (m MenuItem) Title() string       { return m.title }
 func (m MenuItem) Description() string { return m.desc }
 func (m MenuItem) FilterValue() string { return m.title }
 
-func (m MenuItem) ModeActivateCmd() tea.Cmd {
-	model := m.newModel()
+func (m MenuItem) SelectCmd() tea.Cmd {
 	return func() tea.Msg {
-		return ModeActivateMsg{
-			newModel: model,
-			cmd:      m.cmd(),
-		}
+		return MenuSelectMsg{m.newModel()}
 	}
 }
 
@@ -46,9 +39,6 @@ func NewMenuModel() MenuModel {
 			desc:  "Single player mode!",
 			newModel: func() tea.Model {
 				return NewSinglePlayer()
-			},
-			cmd: func() tea.Cmd {
-				return tetris.FallTickCmd()
 			},
 		},
 	}
@@ -82,7 +72,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			selected := m.list.SelectedItem().(MenuItem)
-			cmd = selected.ModeActivateCmd()
+			cmd = selected.SelectCmd()
 
 			return m, cmd
 		}

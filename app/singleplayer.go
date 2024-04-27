@@ -7,7 +7,8 @@ import (
 )
 
 type SinglePlayer struct {
-	*tetris.GameModel
+	gm            *tetris.GameModel
+	finalScore    int
 	height, width int
 }
 
@@ -15,21 +16,36 @@ func NewSinglePlayer() SinglePlayer {
 	gm := tetris.NewGameModel()
 
 	return SinglePlayer{
-		GameModel: &gm,
+		gm: &gm,
 	}
 }
 
+func (s SinglePlayer) Init() tea.Cmd {
+	return tetris.FallTickCmd()
+}
+
 func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
-	if _, ok := msg.(tetris.GameOverMsg); ok {
-		return NewMenuModel(), nil
+	switch msg := msg.(type) {
+	case tetris.GameOverMsg:
+		// Change view
+		return s, DeactivateCmd
+	case tea.KeyMsg:
+		if msg.String() == "q" {
+			return s, DeactivateCmd
+		}
 	}
 
-	newm, cmd := s.GameModel.Update(msg)
+	newm, cmd := s.gm.Update(msg)
 	if newg, ok := newm.(tetris.GameModel); ok {
-		s.GameModel = &newg
+		s.gm = &newg
 		return s, cmd
 	}
 
+	// TODO: Replace with proper error handling
 	// Should never happen
 	panic("Couldn't coerce GameModel update value to GameModel???")
+}
+
+func (s SinglePlayer) View() string {
+	return s.gm.View()
 }
