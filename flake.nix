@@ -7,6 +7,6 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      buildInputs = with pkgs; [ go gopls gotools go-tools just ];
+      buildInputs = with pkgs; [ go gopls gotools go-tools just entr fd ];
     in { devShell.${system} = pkgs.mkShell { inherit buildInputs; }; };
 }
