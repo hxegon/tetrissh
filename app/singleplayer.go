@@ -1,14 +1,16 @@
 package app
 
 import (
+	"fmt"
 	"tetrissh/tetris"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type SinglePlayer struct {
-	gm            *tetris.GameModel
-	finalScore    int
+	gm *tetris.GameModel
+	// A 0 value is potentially valid for a score, so use a pointer instead
+	finalScore    *int
 	height, width int
 }
 
@@ -27,8 +29,8 @@ func (s SinglePlayer) Init() tea.Cmd {
 func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 	switch msg := msg.(type) {
 	case tetris.GameOverMsg:
-		// Change view
-		return s, DeactivateCmd
+		s.finalScore = &msg.Score
+		return s, nil
 	case tea.KeyMsg:
 		if msg.String() == "q" {
 			return s, DeactivateCmd
@@ -47,5 +49,9 @@ func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 }
 
 func (s SinglePlayer) View() string {
-	return s.gm.View()
+	if s.finalScore == nil {
+		return s.gm.View()
+	} else {
+		return fmt.Sprintf("Your final score is %v! Press q to go back to menu", *s.finalScore)
+	}
 }
