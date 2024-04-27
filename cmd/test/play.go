@@ -12,8 +12,8 @@ import (
 /* Just start a tetris game */
 
 type Model struct {
+	game  tea.Model
 	style lipgloss.Style
-	game  tetris.GameModel
 }
 
 func (m Model) Init() tea.Cmd {

@@ -50,7 +50,7 @@ func (m GameModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
+func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -58,6 +58,8 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 		m.game.Fall()
 		if m.game.GameOver {
 			cmd = GameOverCmd(m.game.score)
+		} else {
+			cmd = FallTickCmd()
 		}
 	case tea.KeyMsg:
 		switch msg.String() {

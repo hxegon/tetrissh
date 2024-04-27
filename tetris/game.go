@@ -16,8 +16,14 @@ type Game struct {
 
 func makeBoard(height, width int) [][]int {
 	board := make([][]int, height)
+	blocks := make([]int, height*width)
+
 	for i := range board {
-		board[i] = make([]int, width)
+		// Instead of allocating a new slice height times, do it all with one allocation
+		// by making one []int for all blocks and chopping it up
+		// This function is called ever time we want to render the board,
+		// so this reduces the allocations from height to 1
+		board[i], blocks = blocks[:width], blocks[width:]
 	}
 	return board
 }
