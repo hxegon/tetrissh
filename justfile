@@ -1,6 +1,9 @@
 _default:
   @just --list
 
+run:
+  go run ./cmd/tetrissh/main.go
+
 conn:
   ssh ssh://localhost:42069
 
