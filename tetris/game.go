@@ -22,7 +22,7 @@ func makeBoard(height, width int) [][]int {
 		// Instead of allocating a new slice height times, do it all with one allocation
 		// by making one []int for all blocks and chopping it up
 		// This function is called ever time we want to render the board,
-		// so this reduces the allocations from height to 1
+		// so this reduces the allocations from height+1 to 2
 		board[i], blocks = blocks[:width], blocks[width:]
 	}
 	return board
@@ -80,7 +80,7 @@ func (g Game) colorAt(v Vector) (int, bool) {
 }
 
 // Returns a [][]int of the board with the piece "colored" in
-func (g Game) GetBoard() [][]int {
+func (g Game) Board() [][]int {
 	// make copy of board
 	b := makeBoard(g.height, g.width)
 	for i := range b {
@@ -163,7 +163,7 @@ func (g *Game) Fall() { // Maybe this should return score as well? idk
 	moved := g.moveIfPossible(Vector{0, 1})
 
 	if !moved { // Then we've reached the bottom
-		g.board = g.GetBoard()
+		g.board = g.Board()
 		g.CompactLines()
 		if !g.NextPieceIfPossible() {
 			g.GameOver = true

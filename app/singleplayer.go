@@ -31,7 +31,8 @@ func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 		s.finalScore = &msg.Score
 		return s, nil
 	case tea.KeyMsg:
-		if msg.String() == "q" {
+		switch msg.String() {
+		case "q", "ctrl+c":
 			return s, DeactivateCmd
 		}
 	}

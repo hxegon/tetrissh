@@ -35,7 +35,7 @@ func TestGetBoard(t *testing.T) {
 	width := 10
 	height := 15
 	g := NewGame(height, width, testPiece)
-	b := g.GetBoard()
+	b := g.Board()
 
 	expectedPiecePos := Vector{x: int(width / 2), y: 0}
 

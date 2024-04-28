@@ -75,6 +75,8 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = selected.SelectCmd()
 
 			return m, cmd
+		case "q", "ctrl+c":
+			return m, DeactivateCmd
 		}
 	}
 	m.list, cmd = m.list.Update(msg)

@@ -109,7 +109,7 @@ func toColor(ci int) lipgloss.Color {
 func (m GameModel) View() string {
 	var sb strings.Builder
 
-	b := m.game.GetBoard()
+	b := m.game.Board()
 
 	for y := range b {
 		for x := range b[y] {
