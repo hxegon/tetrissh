@@ -1,8 +1,9 @@
-package tetris
+package app
 
 import (
 	"fmt"
 	"strings"
+	"tetrissh/tetris"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,12 +32,12 @@ type GameModel struct {
 	filledStyle lipgloss.Style
 	emptyStyle  lipgloss.Style
 	scoreStyle  lipgloss.Style
-	game        Game
+	game        tetris.Game
 }
 
 func NewGameModel() GameModel {
 	return GameModel{
-		game:        NewGame(20, 10, RandomPiece()),
+		game:        tetris.NewGame(20, 10, tetris.RandomPiece()),
 		emptyStyle:  lipgloss.NewStyle().Background(lipgloss.Color("233")),
 		filledStyle: lipgloss.NewStyle().Background(lipgloss.Color("240")),
 		scoreStyle: lipgloss.NewStyle().
@@ -64,15 +65,15 @@ func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "h", "left":
-			m.game.Act(ActionLeft)
+			m.game.Act(tetris.ActionLeft)
 		case "l", "right":
-			m.game.Act(ActionRight)
+			m.game.Act(tetris.ActionRight)
 		case "j", "down":
-			m.game.Act(ActionDown)
+			m.game.Act(tetris.ActionDown)
 		case "k", "r", "up":
-			m.game.Act(ActionRotate)
+			m.game.Act(tetris.ActionRotate)
 		case " ":
-			m.game.Act(ActionDrop)
+			m.game.Act(tetris.ActionDrop)
 		}
 	}
 
@@ -80,25 +81,26 @@ func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func toColor(ci int) lipgloss.Color {
-	c := Color(ci)
+	c := tetris.Color(ci)
 	var code string
 
 	switch c {
-	case ColorEmpty:
+	case tetris.ColorEmpty:
 		code = "240"
-	case ColorRed:
+	case tetris.ColorRed:
 		code = "001"
-	case ColorBlue:
+	case tetris.ColorBlue:
 		code = "004"
-	case ColorGreen:
+	case tetris.ColorGreen:
 		code = "002"
-	case ColorOrange:
+	case tetris.ColorOrange:
 		code = "202"
-	case ColorPurple:
+	case tetris.ColorPurple:
 		code = "129"
-	case ColorYellow:
+	case tetris.ColorYellow:
 		code = "011"
 	default:
+		// TODO: Don't use panic for error handling, maybe an Error()?
 		panic("Trying to convert an int to a color but there were no matching colors")
 	}
 	return lipgloss.Color(code)

@@ -2,20 +2,19 @@ package app
 
 import (
 	"fmt"
-	"tetrissh/tetris"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type SinglePlayer struct {
-	gm *tetris.GameModel
+	gm *GameModel
 	// A 0 value is potentially valid for a score, so use a pointer instead
 	finalScore    *int
 	height, width int
 }
 
 func NewSinglePlayer() SinglePlayer {
-	gm := tetris.NewGameModel()
+	gm := NewGameModel()
 
 	return SinglePlayer{
 		gm: &gm,
@@ -23,12 +22,12 @@ func NewSinglePlayer() SinglePlayer {
 }
 
 func (s SinglePlayer) Init() tea.Cmd {
-	return tetris.FallTickCmd()
+	return FallTickCmd()
 }
 
 func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 	switch msg := msg.(type) {
-	case tetris.GameOverMsg:
+	case GameOverMsg:
 		s.finalScore = &msg.Score
 		return s, nil
 	case tea.KeyMsg:
@@ -38,7 +37,7 @@ func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 	}
 
 	newm, cmd := s.gm.Update(msg)
-	if newg, ok := newm.(tetris.GameModel); ok {
+	if newg, ok := newm.(GameModel); ok {
 		s.gm = &newg
 		return s, cmd
 	}
