@@ -23,7 +23,7 @@ func (m MenuItem) FilterValue() string { return m.title }
 
 func (m MenuItem) SelectCmd() tea.Cmd {
 	return func() tea.Msg {
-		return MenuSelectMsg{m.newModel()}
+		return MenuSelectMsg{model: m.newModel()}
 	}
 }
 
@@ -33,22 +33,23 @@ type MenuModel struct {
 }
 
 func NewMenuModel() MenuModel {
-	options := []MenuItem{
-		{
+	options := []list.Item{
+		MenuItem{
 			title: "Start",
-			desc:  "Single player mode!",
+			desc:  "Single player",
 			newModel: func() tea.Model {
 				return NewSinglePlayer()
+			},
+		}, MenuItem{
+			title: "VS",
+			desc:  "Multiplayer",
+			newModel: func() tea.Model {
+				return NewMultiplayer()
 			},
 		},
 	}
 
-	items := make([]list.Item, len(options))
-	for i, p := range options {
-		items[i] = list.Item(p)
-	}
-
-	list := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	list := list.New(options, list.NewDefaultDelegate(), 0, 0)
 	list.Title = "Menu"
 
 	return MenuModel{
@@ -79,6 +80,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, DeactivateCmd
 		}
 	}
+
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
 }

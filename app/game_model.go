@@ -51,7 +51,7 @@ func (m GameModel) Init() tea.Cmd {
 	return FallTickCmd()
 }
 
-func (m GameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {

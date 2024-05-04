@@ -37,15 +37,8 @@ func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 		}
 	}
 
-	newm, cmd := s.gm.Update(msg)
-	if newg, ok := newm.(GameModel); ok {
-		s.gm = &newg
-		return s, cmd
-	}
-
-	// TODO: Replace with proper error handling
-	// Should never happen
-	panic("Couldn't coerce GameModel update value to GameModel???")
+	*s.gm, cmd = s.gm.Update(msg)
+	return s, cmd
 }
 
 func (s SinglePlayer) View() string {

@@ -24,6 +24,8 @@ const (
 	port = "42069"
 )
 
+var newsessions = make(chan *app.MultiplayerSession)
+
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
@@ -37,6 +39,10 @@ func main() {
 	if err != nil {
 		log.Error("Could not start server", "error", err)
 	}
+
+	// Only invoke once!
+	// TODO: hook into done channel
+	go app.MatchSessions()
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
