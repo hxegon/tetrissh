@@ -45,10 +45,19 @@ func MatchMultiplayerGames() {
 	}
 }
 
+type matchState int
+
+const (
+	msLooking matchState = iota
+	msRunning
+	msCanceled
+)
+
 type MultiplayerGame struct {
 	cancel    context.CancelFunc
 	session   *MultiplayerSession
 	opSession *MultiplayerSession
+	mstate    matchState
 }
 
 func NewMultiplayer() *MultiplayerGame {
@@ -73,20 +82,38 @@ func NewMultiplayer() *MultiplayerGame {
 	return game
 }
 
+// sets and returns matchState, but m.mstate shouldn't be accessed other than through here
+func (m *MultiplayerGame) setState() matchState {
+	if m.opSession == nil {
+		if m.mstate == msRunning {
+			m.mstate = msCanceled
+		}
+	} else {
+		select {
+		case <-m.opSession.done():
+			m.opSession = nil
+			m.cancel()
+			m.mstate = msCanceled
+		case <-m.session.done(): // Shouldn't really be reached but just in case
+			m.opSession = nil
+			m.mstate = msCanceled
+		default:
+			if m.mstate == msLooking {
+				m.mstate = msRunning
+			}
+		}
+	}
+
+	return m.mstate
+}
+
 func (m MultiplayerGame) Init() tea.Cmd {
 	return nil
 }
 
+// TODO: Start ticker to refresh view when looking for match
 func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Drop opSession pointer if it exists but was canceled
-	// TODO: Notify user that the opSession was canceled
-	if m.opSession != nil {
-		select {
-		case <-m.opSession.done():
-			m.opSession = nil
-		default:
-		}
-	}
+	// state := m.setState()
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -101,9 +128,15 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MultiplayerGame) View() string {
-	if m.opSession == nil {
+	switch m.setState() {
+	case msLooking:
 		return "looking for match"
-	} else {
-		return "found match"
+	case msRunning:
+		return "Found match"
+	case msCanceled:
+		return "match canceled"
+	default:
+		log.Warn("invalid match state in multiplayergame view function")
+		return "something went wrong!"
 	}
 }
