@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-var matchReqC = make(chan matchReq)
+var matchReqC = make(chan *MultiplayerGame)
 
 type MultiplayerSession struct {
 	ctx   context.Context
@@ -16,31 +16,20 @@ type MultiplayerSession struct {
 	mx    *sync.RWMutex
 }
 
-type matchReq struct {
-	session   *MultiplayerSession
-	opSession *MultiplayerSession
-}
-
-// Return the done channel from the request's context
-func (m matchReq) done() <-chan struct{} {
-	return m.session.ctx.Done()
-}
-
 // On a loop, match requests. Meant to be used in a goroutine in main
-// TODO: pass in a context
-func MatchSessions() {
-	var lastReq *matchReq
+func MatchMultiplayerGames() {
+	var lastReq *MultiplayerGame
 
 	for {
 		nextReq := <-matchReqC
 
 		if lastReq == nil {
-			lastReq = &nextReq
+			lastReq = nextReq
 		} else {
 			select {
-			case <-lastReq.done():
+			case <-lastReq.done(): // Has the last request been canceled?
 				log.Info("Multiplayer request canceled")
-				*lastReq = nextReq
+				lastReq = nextReq
 			default:
 				log.Info("Exchanging multiplayer session pointers")
 				lastReq.opSession = nextReq.session
@@ -58,7 +47,7 @@ type MultiplayerGame struct {
 	opSession *MultiplayerSession
 }
 
-func NewMultiplayer() MultiplayerGame {
+func NewMultiplayer() *MultiplayerGame {
 	ctx, cancel := context.WithCancel(context.Background())
 	var board *[][]int
 	var mx *sync.RWMutex
@@ -69,18 +58,19 @@ func NewMultiplayer() MultiplayerGame {
 		mx:    mx,
 	}
 
-	var opSession *MultiplayerSession
-
-	matchReqC <- matchReq{
-		session:   &session,
-		opSession: opSession,
+	game := &MultiplayerGame{
+		// opSession is left as an uninitialized pointer to be used later by the matchmaking goroutine
+		session: &session,
+		cancel:  cancel,
 	}
 
-	return MultiplayerGame{
-		session:   &session,
-		opSession: opSession,
-		cancel:    cancel,
-	}
+	matchReqC <- game
+
+	return game
+}
+
+func (m MultiplayerGame) done() <-chan struct{} {
+	return m.session.ctx.Done()
 }
 
 func (m MultiplayerGame) Init() tea.Cmd {

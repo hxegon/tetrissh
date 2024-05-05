@@ -42,7 +42,7 @@ func main() {
 
 	// Only invoke once!
 	// TODO: hook into done channel
-	go app.MatchSessions()
+	go app.MatchMultiplayerGames()
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
