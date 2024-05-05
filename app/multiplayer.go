@@ -16,6 +16,10 @@ type MultiplayerSession struct {
 	mx    *sync.RWMutex
 }
 
+func (m MultiplayerSession) done() <-chan struct{} {
+	return m.ctx.Done()
+}
+
 // On a loop, match requests. Meant to be used in a goroutine in main
 func MatchMultiplayerGames() {
 	var lastReq *MultiplayerGame
@@ -27,7 +31,7 @@ func MatchMultiplayerGames() {
 			lastReq = nextReq
 		} else {
 			select {
-			case <-lastReq.done(): // Has the last request been canceled?
+			case <-lastReq.session.done(): // Has the last request been canceled?
 				log.Info("Multiplayer request canceled")
 				lastReq = nextReq
 			default:
@@ -69,15 +73,21 @@ func NewMultiplayer() *MultiplayerGame {
 	return game
 }
 
-func (m MultiplayerGame) done() <-chan struct{} {
-	return m.session.ctx.Done()
-}
-
 func (m MultiplayerGame) Init() tea.Cmd {
 	return nil
 }
 
 func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Drop opSession pointer if it exists but was canceled
+	// TODO: Notify user that the opSession was canceled
+	if m.opSession != nil {
+		select {
+		case <-m.opSession.done():
+			m.opSession = nil
+		default:
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
