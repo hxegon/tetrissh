@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"sync"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
@@ -13,7 +13,6 @@ var matchReqC = make(chan *MultiplayerGame)
 type MultiplayerSession struct {
 	ctx   context.Context
 	board *[][]int
-	mx    *sync.RWMutex
 }
 
 func (m MultiplayerSession) done() <-chan struct{} {
@@ -32,10 +31,10 @@ func MatchMultiplayerGames() {
 		} else {
 			select {
 			case <-lastReq.session.done(): // Has the last request been canceled?
-				log.Info("Multiplayer request canceled")
+				log.Info("match request canceled")
 				lastReq = nextReq
 			default:
-				log.Info("Exchanging multiplayer session pointers")
+				log.Info("Exchanging match pointers")
 				lastReq.opSession = nextReq.session
 				nextReq.opSession = lastReq.session
 
@@ -53,6 +52,19 @@ const (
 	msCanceled
 )
 
+func (m matchState) String() string {
+	switch m {
+	case msLooking:
+		return "looking for match"
+	case msRunning:
+		return "match active"
+	case msCanceled:
+		return "match canceled"
+	default:
+		return "invalid matchState"
+	}
+}
+
 type MultiplayerGame struct {
 	cancel    context.CancelFunc
 	session   *MultiplayerSession
@@ -63,18 +75,17 @@ type MultiplayerGame struct {
 func NewMultiplayer() *MultiplayerGame {
 	ctx, cancel := context.WithCancel(context.Background())
 	var board *[][]int
-	var mx *sync.RWMutex
 
-	session := MultiplayerSession{
+	session := &MultiplayerSession{
 		ctx:   ctx,
 		board: board,
-		mx:    mx,
 	}
+	var opSession *MultiplayerSession
 
 	game := &MultiplayerGame{
-		// opSession is left as an uninitialized pointer to be used later by the matchmaking goroutine
-		session: &session,
-		cancel:  cancel,
+		session:   session,
+		opSession: opSession,
+		cancel:    cancel,
 	}
 
 	matchReqC <- game
@@ -83,39 +94,60 @@ func NewMultiplayer() *MultiplayerGame {
 }
 
 // sets and returns matchState, but m.mstate shouldn't be accessed other than through here
-func (m *MultiplayerGame) setState() matchState {
+func (m *MultiplayerGame) state() matchState {
+	oldState := m.mstate
+	newState := m.mstate
+
 	if m.opSession == nil {
-		if m.mstate == msRunning {
-			m.mstate = msCanceled
+		if oldState == msRunning {
+			newState = msCanceled
 		}
 	} else {
 		select {
+		// Check if either session in the match is canceled
 		case <-m.opSession.done():
 			m.opSession = nil
 			m.cancel()
-			m.mstate = msCanceled
+			newState = msCanceled
 		case <-m.session.done(): // Shouldn't really be reached but just in case
 			m.opSession = nil
-			m.mstate = msCanceled
-		default:
-			if m.mstate == msLooking {
-				m.mstate = msRunning
+			newState = msCanceled
+		default: // If not, make sure mstate is running
+			if oldState == msLooking {
+				newState = msRunning
 			}
 		}
 	}
 
-	return m.mstate
+	m.mstate = newState
+
+	return newState
+}
+
+type MatchLookTickMsg struct{}
+
+func MatchLookTick() tea.Cmd {
+	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
+		return MatchLookTickMsg{}
+	})
 }
 
 func (m MultiplayerGame) Init() tea.Cmd {
-	return nil
+	return MatchLookTick()
 }
 
-// TODO: Start ticker to refresh view when looking for match
+// FIXME: Doesn't properly cancel multiplayer match if session is terminated OOB (not C-c or q)
 func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// state := m.setState()
+	var cmd tea.Cmd
+	m.state()
 
 	switch msg := msg.(type) {
+	case MatchLookTickMsg:
+		// Continue refreshing if there's no match found
+		log.Info("MatchLookTickMsg")
+		if m.mstate == msLooking {
+			cmd = MatchLookTick()
+		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
@@ -124,11 +156,12 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, DeactivateCmd
 		}
 	}
-	return m, nil
+	return m, cmd
 }
 
 func (m MultiplayerGame) View() string {
-	switch m.setState() {
+	state := m.state()
+	switch state {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
