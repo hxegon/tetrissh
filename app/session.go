@@ -74,14 +74,14 @@ func MatchMultiplayerGames() {
 		} else {
 			select {
 			case <-lastReq.session.done(): // Has the last request been canceled?
-				log.Info("match request canceled")
+				log.Debug("match request canceled")
 				close(lastReq.opC)
 				*lastReq = nextReq
 			case <-nextReq.session.done():
 				// Skip this request if context is canceled
 				continue
 			default:
-				log.Info("Exchanging match requests")
+				log.Debug("Exchanging match requests")
 				// FIXME: The sending channels shouldn't be filled anywhere else, but we should still check/handle it if they are
 				// otherwise this will paralyze matchmaking. Also, handle panics here.
 				lastReq.opC <- nextReq.session

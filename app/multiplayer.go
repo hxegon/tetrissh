@@ -91,14 +91,12 @@ func (m *MultiplayerGame) setState() {
 			select {
 			// Check if either session in the match is canceled
 			case <-m.opSession.done():
-				log.Info("opsession canceled, setting mstate to canceled")
 				newState = msCanceled
 			case <-m.session.done(): // Shouldn't really be reached but just in case
 				newState = msCanceled
 			default: // If not, make sure mstate is running
-				log.Info("default case for state")
 				if oldState == msLooking {
-					log.Info("Setting multiplayer game to running, initializing fall tick")
+					log.Debug("Setting multiplayer game to running, initializing fall tick")
 					newState = msRunning
 				}
 			}
@@ -140,7 +138,6 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case MatchLookTickMsg:
 		// Continue refreshing if there's no match found
-		log.Infof("MatchLookTickMsg! mstate %v", m.mstate.String())
 		if m.mstate == msLooking {
 			select {
 			case s, ok := <-m.opC:
@@ -149,7 +146,6 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// TODO: Return error msg cmd here
 					return m, nil
 				} else {
-					log.Info("Setting opSession")
 					m.opSession = s
 					return m, m.game.Init()
 				}
@@ -160,7 +156,6 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
-			log.Info("Canceling multiplayer ctx")
 			m.close()
 			return m, DeactivateCmd
 		default:
