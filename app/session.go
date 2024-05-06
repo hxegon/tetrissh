@@ -36,11 +36,11 @@ func (m *MultiplayerSession) Board() (board [][]int, ok bool) {
 	return board, ok
 }
 
-func (m MultiplayerSession) SetBoard(b [][]int) {
+func (m *MultiplayerSession) SetBoard(b [][]int) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
-	*m.board = b
+	m.board = &b
 }
 
 type matchReq struct {

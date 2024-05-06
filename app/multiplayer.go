@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -45,7 +46,12 @@ func NewMultiplayer() *MultiplayerGame {
 	session := &MultiplayerSession{
 		ctx:   ctx,
 		board: board,
+		mx:    new(sync.RWMutex),
 	}
+
+	gm := NewGameModel()
+	// initialize the board pointer, it shouldn't be nil unless the game has been closed
+	session.SetBoard(gm.Board())
 
 	opC := session.requestMatch()
 
@@ -53,6 +59,7 @@ func NewMultiplayer() *MultiplayerGame {
 		session: session,
 		cancel:  cancel,
 		opC:     opC,
+		game:    &gm,
 	}
 
 	return game

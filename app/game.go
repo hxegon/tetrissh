@@ -44,6 +44,11 @@ func NewGameModel() GameModel {
 	}
 }
 
+// Wrapper around game.Board(), probably a code smell
+func (gm *GameModel) Board() [][]int {
+	return gm.game.Board()
+}
+
 func (m GameModel) Init() tea.Cmd {
 	return FallTickCmd()
 }
@@ -104,7 +109,7 @@ func toColor(ci int) lipgloss.Color {
 }
 
 func (m GameModel) View() string {
-	board := RenderBoard(m.game.Board(), m.boardStyle)
+	board := RenderBoard(m.Board(), m.boardStyle)
 
 	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.Score))
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
