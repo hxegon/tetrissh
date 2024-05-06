@@ -57,6 +57,14 @@ func NewMultiplayer() *MultiplayerGame {
 	return game
 }
 
+func (m *MultiplayerGame) close() {
+	log.Debug("Closing game")
+	m.cancel()
+	// drop pointers
+	m.opSession.board = nil
+	m.session.board = nil
+}
+
 // Return enum checking if the game is looking for a match, running or canceled
 // sets and returns matchState, but m.mstate shouldn't be accessed other than through here
 func (m *MultiplayerGame) state() matchState {
@@ -72,11 +80,8 @@ func (m *MultiplayerGame) state() matchState {
 		// Check if either session in the match is canceled
 		case <-m.opSession.done():
 			log.Info("opsession canceled, setting mstate to canceled")
-			m.opSession = nil
-			m.cancel()
 			newState = msCanceled
 		case <-m.session.done(): // Shouldn't really be reached but just in case
-			m.opSession = nil
 			newState = msCanceled
 		default: // If not, make sure mstate is running
 			log.Info("default case for state")
@@ -132,7 +137,7 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			log.Info("Canceling multiplayer ctx")
-			m.cancel()
+			m.close()
 			return m, DeactivateCmd
 		}
 	}
