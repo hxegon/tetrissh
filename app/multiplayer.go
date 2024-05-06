@@ -33,7 +33,8 @@ type MultiplayerGame struct {
 	cancel    context.CancelFunc
 	session   *MultiplayerSession
 	opSession *MultiplayerSession
-	opC       <-chan *MultiplayerSession // Should only be read once
+	opC       <-chan *MultiplayerSession
+	game      *GameModel
 	mstate    matchState
 }
 
@@ -72,6 +73,7 @@ func (m *MultiplayerGame) state() matchState {
 	newState := m.mstate
 
 	if m.opSession == nil {
+		// Why does this throw nil pointer deref error if oldState == msRunning is inlined with above?
 		if oldState == msRunning {
 			newState = msCanceled
 		}

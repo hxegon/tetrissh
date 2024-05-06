@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"strings"
 	"tetrissh/tetris"
 	"time"
 
@@ -29,17 +28,15 @@ func GameOverCmd(score int) tea.Cmd {
 }
 
 type GameModel struct {
-	filledStyle lipgloss.Style
-	emptyStyle  lipgloss.Style
-	scoreStyle  lipgloss.Style
-	game        tetris.Game
+	boardStyle boardStyle
+	scoreStyle lipgloss.Style
+	game       tetris.Game
 }
 
 func NewGameModel() GameModel {
 	return GameModel{
-		game:        tetris.NewGame(20, 10, tetris.RandomPiece()),
-		emptyStyle:  lipgloss.NewStyle().Background(lipgloss.Color("233")),
-		filledStyle: lipgloss.NewStyle().Background(lipgloss.Color("240")),
+		game:       tetris.NewGame(20, 10, tetris.RandomPiece()),
+		boardStyle: defaultBoardStyle(),
 		scoreStyle: lipgloss.NewStyle().
 			Width(18).
 			Border(lipgloss.NormalBorder(), true).
@@ -107,27 +104,8 @@ func toColor(ci int) lipgloss.Color {
 }
 
 func (m GameModel) View() string {
-	var sb strings.Builder
-
-	b := m.game.Board()
-
-	for y := range b {
-		for x := range b[y] {
-			val := b[y][x]
-			color := lipgloss.Color(toColor(val))
-			if val == 0 {
-				sb.WriteString(m.emptyStyle.Foreground(color).Render("░░"))
-			} else {
-				sb.WriteString(m.filledStyle.Foreground(color).Render("🮑🮒"))
-			}
-		}
-
-		if y != len(b)-1 { // Don't add a newline at the bottom
-			sb.WriteString("\n")
-		}
-	}
+	board := RenderBoard(m.game.Board(), m.boardStyle)
 
 	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.Score))
-	board := sb.String()
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }

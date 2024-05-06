@@ -14,7 +14,7 @@ type Game struct {
 	GameOver bool
 }
 
-func makeBoard(height, width int) [][]int {
+func NewBoard(height, width int) [][]int {
 	board := make([][]int, height)
 	blocks := make([]int, height*width)
 
@@ -46,7 +46,7 @@ func (g *Game) NextPieceIfPossible() bool {
 
 func NewGame(height, width int, piece Piece) Game {
 	// Initialize board
-	board := makeBoard(height, width)
+	board := NewBoard(height, width)
 
 	g := Game{
 		height:   height,
@@ -82,7 +82,7 @@ func (g Game) colorAt(v Vector) (int, bool) {
 // Returns a [][]int of the board with the piece "colored" in
 func (g Game) Board() [][]int {
 	// make copy of board
-	b := makeBoard(g.height, g.width)
+	b := NewBoard(g.height, g.width)
 	for i := range b {
 		copy(b[i], g.board[i])
 	}
