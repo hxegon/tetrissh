@@ -8,42 +8,6 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-var matchReqC = make(chan *MultiplayerGame)
-
-type MultiplayerSession struct {
-	ctx   context.Context
-	board *[][]int
-}
-
-func (m MultiplayerSession) done() <-chan struct{} {
-	return m.ctx.Done()
-}
-
-// On a loop, match requests. Meant to be used in a goroutine in main
-func MatchMultiplayerGames() {
-	var lastReq *MultiplayerGame
-
-	for {
-		nextReq := <-matchReqC
-
-		if lastReq == nil {
-			lastReq = nextReq
-		} else {
-			select {
-			case <-lastReq.session.done(): // Has the last request been canceled?
-				log.Info("match request canceled")
-				lastReq = nextReq
-			default:
-				log.Info("Exchanging match pointers")
-				lastReq.opSession = nextReq.session
-				nextReq.opSession = lastReq.session
-
-				lastReq = nil
-			}
-		}
-	}
-}
-
 type matchState int
 
 const (
@@ -69,6 +33,7 @@ type MultiplayerGame struct {
 	cancel    context.CancelFunc
 	session   *MultiplayerSession
 	opSession *MultiplayerSession
+	opC       <-chan *MultiplayerSession // Should only be read once
 	mstate    matchState
 }
 
@@ -80,19 +45,19 @@ func NewMultiplayer() *MultiplayerGame {
 		ctx:   ctx,
 		board: board,
 	}
-	var opSession *MultiplayerSession
+
+	opC := session.requestMatch()
 
 	game := &MultiplayerGame{
-		session:   session,
-		opSession: opSession,
-		cancel:    cancel,
+		session: session,
+		cancel:  cancel,
+		opC:     opC,
 	}
-
-	matchReqC <- game
 
 	return game
 }
 
+// Return enum checking if the game is looking for a match, running or canceled
 // sets and returns matchState, but m.mstate shouldn't be accessed other than through here
 func (m *MultiplayerGame) state() matchState {
 	oldState := m.mstate
@@ -106,6 +71,7 @@ func (m *MultiplayerGame) state() matchState {
 		select {
 		// Check if either session in the match is canceled
 		case <-m.opSession.done():
+			log.Info("opsession canceled, setting mstate to canceled")
 			m.opSession = nil
 			m.cancel()
 			newState = msCanceled
@@ -113,14 +79,15 @@ func (m *MultiplayerGame) state() matchState {
 			m.opSession = nil
 			newState = msCanceled
 		default: // If not, make sure mstate is running
+			log.Info("default case for state")
 			if oldState == msLooking {
+				log.Info("Setting multiplayer game to running")
 				newState = msRunning
 			}
 		}
 	}
 
 	m.mstate = newState
-
 	return newState
 }
 
@@ -144,9 +111,22 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case MatchLookTickMsg:
 		// Continue refreshing if there's no match found
-		log.Info("MatchLookTickMsg")
+		log.Infof("MatchLookTickMsg! mstate %v", m.mstate.String())
 		if m.mstate == msLooking {
-			cmd = MatchLookTick()
+			select {
+			case s, ok := <-m.opC:
+				if !ok {
+					log.Warn("Tried to read from a closed opC on a MatchLook msg")
+					// TODO: Return error msg cmd here
+					return m, nil
+				} else {
+					log.Info("Setting opSession")
+					m.opSession = s
+					return m, nil
+				}
+			default:
+				return m, MatchLookTick()
+			}
 		}
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -165,6 +145,7 @@ func (m MultiplayerGame) View() string {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
+		// TODO: view ours & op's board
 		return "Found match"
 	case msCanceled:
 		return "match canceled"
