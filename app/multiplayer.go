@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
 
@@ -75,34 +76,48 @@ func (m *MultiplayerGame) close() {
 
 // Return enum checking if the game is looking for a match, running or canceled
 // sets and returns matchState, but m.mstate shouldn't be accessed other than through here
-func (m *MultiplayerGame) state() matchState {
+func (m *MultiplayerGame) setState() {
 	oldState := m.mstate
-	newState := m.mstate
 
-	if m.opSession == nil {
-		// Why does this throw nil pointer deref error if oldState == msRunning is inlined with above?
-		if oldState == msRunning {
-			newState = msCanceled
-		}
-	} else {
-		select {
-		// Check if either session in the match is canceled
-		case <-m.opSession.done():
-			log.Info("opsession canceled, setting mstate to canceled")
-			newState = msCanceled
-		case <-m.session.done(): // Shouldn't really be reached but just in case
-			newState = msCanceled
-		default: // If not, make sure mstate is running
-			log.Info("default case for state")
-			if oldState == msLooking {
-				log.Info("Setting multiplayer game to running")
-				newState = msRunning
+	if oldState != msCanceled {
+		newState := m.mstate
+
+		if m.opSession == nil {
+			// Why does this throw nil pointer deref error if oldState == msRunning is inlined with above?
+			if oldState == msRunning {
+				newState = msCanceled
+			}
+		} else {
+			select {
+			// Check if either session in the match is canceled
+			case <-m.opSession.done():
+				log.Info("opsession canceled, setting mstate to canceled")
+				newState = msCanceled
+			case <-m.session.done(): // Shouldn't really be reached but just in case
+				newState = msCanceled
+			default: // If not, make sure mstate is running
+				log.Info("default case for state")
+				if oldState == msLooking {
+					log.Info("Setting multiplayer game to running, initializing fall tick")
+					newState = msRunning
+				}
 			}
 		}
-	}
 
-	m.mstate = newState
-	return newState
+		m.mstate = newState
+	}
+}
+
+func (m *MultiplayerGame) SetBoard() {
+	// FIXME: is session context closed? what about opSession? etc.
+	m.session.SetBoard(m.game.Board())
+}
+
+func (m *MultiplayerGame) opBoard() [][]int {
+	if b, ok := m.opSession.Board(); ok {
+		return b
+	}
+	panic("couldn't get board")
 }
 
 type MatchLookTickMsg struct{}
@@ -120,7 +135,7 @@ func (m MultiplayerGame) Init() tea.Cmd {
 // FIXME: Doesn't properly cancel multiplayer match if session is terminated OOB (not C-c or q)
 func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	m.state()
+	m.setState()
 
 	switch msg := msg.(type) {
 	case MatchLookTickMsg:
@@ -136,7 +151,7 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					log.Info("Setting opSession")
 					m.opSession = s
-					return m, nil
+					return m, m.game.Init()
 				}
 			default:
 				return m, MatchLookTick()
@@ -148,19 +163,27 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Info("Canceling multiplayer ctx")
 			m.close()
 			return m, DeactivateCmd
+		default:
+			if m.mstate == msRunning {
+				*m.game, cmd = m.game.Update(msg)
+				m.SetBoard()
+			}
 		}
+	case FallMsg:
+		*m.game, cmd = m.game.Update(msg)
+		m.SetBoard()
 	}
 	return m, cmd
 }
 
 func (m MultiplayerGame) View() string {
-	state := m.state()
-	switch state {
+	m.setState()
+	switch m.mstate {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
 		// TODO: view ours & op's board
-		return "Found match"
+		return lipgloss.JoinHorizontal(lipgloss.Left, m.game.View(), RenderBoard(m.opBoard(), defaultBoardStyle()))
 	case msCanceled:
 		return "match canceled"
 	default:
