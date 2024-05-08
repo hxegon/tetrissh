@@ -111,13 +111,6 @@ func (m *MultiplayerGame) SetBoard() {
 	m.session.SetBoard(m.game.Board())
 }
 
-func (m *MultiplayerGame) opBoard() [][]int {
-	if b, ok := m.opSession.Board(); ok {
-		return b
-	}
-	panic("couldn't get board")
-}
-
 type MatchLookTickMsg struct{}
 
 func MatchLookTick() tea.Cmd {
@@ -177,8 +170,15 @@ func (m MultiplayerGame) View() string {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
-		// TODO: view ours & op's board
-		return lipgloss.JoinHorizontal(lipgloss.Left, m.game.View(), RenderBoard(m.opBoard(), defaultBoardStyle()))
+		if b, ok := m.opSession.Board(); ok {
+			return lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				m.game.View(),
+				RenderBoard(b, defaultBoardStyle()),
+			)
+		} else {
+			panic("couldn't get board")
+		}
 	case msCanceled:
 		return "match canceled"
 	default:
