@@ -70,8 +70,8 @@ func (m *MultiplayerGame) close() {
 	log.Debug("Closing game")
 	m.cancel()
 	// drop pointers
-	m.opSession.board = nil
-	m.session.board = nil
+	m.opSession = nil
+	m.session = nil
 }
 
 // Return enum checking if the game is looking for a match, running or canceled
