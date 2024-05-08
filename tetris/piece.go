@@ -69,7 +69,7 @@ func RandomPiece() Piece {
 	return Pieces[idx]
 }
 
-func (p Piece) YOffset() int {
+func (p Piece) yOffset() int {
 	offset := 0
 
 	for _, v := range p.shape {
@@ -81,7 +81,7 @@ func (p Piece) YOffset() int {
 	return offset
 }
 
-func (p Piece) Copy() Piece {
+func (p Piece) copy() Piece {
 	newP := Piece{
 		color:     p.color,
 		canRotate: p.canRotate,
@@ -93,8 +93,8 @@ func (p Piece) Copy() Piece {
 	return newP
 }
 
-func (p Piece) Rotate() Piece {
-	newP := p.Copy()
+func (p Piece) rotate() Piece {
+	newP := p.copy()
 
 	// idk trig I just copy paste grug
 	ang := math.Pi / 2

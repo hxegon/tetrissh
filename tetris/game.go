@@ -2,8 +2,6 @@ package tetris
 
 import "fmt"
 
-/* The tetris game should work basically like a state machine. */
-
 type Game struct {
 	board    [][]int
 	piece    Piece
@@ -14,7 +12,7 @@ type Game struct {
 	GameOver bool
 }
 
-func NewBoard(height, width int) [][]int {
+func newBoard(height, width int) [][]int {
 	board := make([][]int, height)
 	blocks := make([]int, height*width)
 
@@ -29,12 +27,12 @@ func NewBoard(height, width int) [][]int {
 }
 
 // Returns false if there wasn't room for another piece
-func (g *Game) NextPieceIfPossible() bool {
+func (g *Game) nextPieceIfPossible() bool {
 	piece := RandomPiece()
-	pos := Vector{x: int(g.width / 2), y: 0 - piece.YOffset()}
+	pos := Vector{x: int(g.width / 2), y: 0 - piece.yOffset()}
 
 	for _, b := range piece.shape {
-		if c, ok := g.colorAt(pos.Add(b)); !ok || c > 0 {
+		if c, ok := g.colorAt(pos.add(b)); !ok || c > 0 {
 			return false
 		}
 	}
@@ -46,7 +44,7 @@ func (g *Game) NextPieceIfPossible() bool {
 
 func NewGame(height, width int, piece Piece) Game {
 	// Initialize board
-	board := NewBoard(height, width)
+	board := newBoard(height, width)
 
 	g := Game{
 		height:   height,
@@ -55,7 +53,7 @@ func NewGame(height, width int, piece Piece) Game {
 		GameOver: false,
 	}
 
-	g.NextPieceIfPossible()
+	g.nextPieceIfPossible()
 	return g
 }
 
@@ -82,14 +80,14 @@ func (g Game) colorAt(v Vector) (int, bool) {
 // Returns a [][]int of the board with the piece "colored" in
 func (g Game) Board() [][]int {
 	// make copy of board
-	b := NewBoard(g.height, g.width)
+	b := newBoard(g.height, g.width)
 	for i := range b {
 		copy(b[i], g.board[i])
 	}
 
 	// set piece's shape colors on to board
 	for _, v := range g.piece.shape {
-		pos := g.pos.Add(v)
+		pos := g.pos.add(v)
 
 		// Should never happen because bounds checks exist everywhere piece is moved/placed
 		if !g.isInBounds(pos) {
@@ -106,21 +104,21 @@ func (g Game) Board() [][]int {
 // Would any new positions in the shape blocks become out of bounds?
 func (g *Game) moveIfPossible(direction Vector) bool {
 	for _, s := range g.piece.shape {
-		newPos := g.pos.Add(s).Add(direction)
+		newPos := g.pos.add(s).add(direction)
 		if c, inBounds := g.colorAt(newPos); !inBounds || c > 0 {
 			return false
 		}
 	}
 
-	g.pos = g.pos.Add(direction)
+	g.pos = g.pos.add(direction)
 	return true
 }
 
 // argument is true for clockwise, false for counterclockwise. Returns true if it rotated, false if it couldn't
 func (g *Game) rotateIfPossible() bool {
-	newPiece := g.piece.Rotate()
+	newPiece := g.piece.rotate()
 	for _, s := range newPiece.shape {
-		if c, ok := g.colorAt(g.pos.Add(s)); !ok || c > 0 {
+		if c, ok := g.colorAt(g.pos.add(s)); !ok || c > 0 {
 			return false
 		}
 	}
@@ -130,7 +128,7 @@ func (g *Game) rotateIfPossible() bool {
 }
 
 // TODO: Make this return the number of completed lines, use this for score externally instead
-func (g *Game) CompactLines() {
+func (g *Game) compactLines() {
 	var broken bool
 	completedLines := 0
 
@@ -164,15 +162,15 @@ func (g *Game) Fall() { // Maybe this should return score as well? idk
 
 	if !moved { // Then we've reached the bottom
 		g.board = g.Board()
-		g.CompactLines()
-		if !g.NextPieceIfPossible() {
+		g.compactLines()
+		if !g.nextPieceIfPossible() {
 			g.GameOver = true
 		}
 	}
 }
 
 // Instantly fall
-func (g *Game) Drop() {
+func (g *Game) drop() {
 	for {
 		if !g.moveIfPossible(Vector{0, 1}) {
 			g.Fall()
@@ -202,7 +200,7 @@ func (g *Game) Act(a Action) {
 	case ActionRotate:
 		g.rotateIfPossible()
 	case ActionDrop:
-		g.Drop()
+		g.drop()
 	}
 }
 
