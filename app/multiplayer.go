@@ -106,8 +106,8 @@ func (m *MultiplayerGame) setState() {
 	}
 }
 
+// Update this game's session board. Thread safe, blocks on mutex
 func (m *MultiplayerGame) SetBoard() {
-	// FIXME: is session context closed? what about opSession? etc.
 	m.session.SetBoard(m.game.Board())
 }
 
@@ -132,6 +132,7 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case MatchLookTickMsg:
 		// Continue refreshing if there's no match found
 		if m.mstate == msLooking {
+			// Once an opponent session has been sent, set the opponent
 			select {
 			case s, ok := <-m.opC:
 				if !ok {

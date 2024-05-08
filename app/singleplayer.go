@@ -8,8 +8,8 @@ import (
 
 type SinglePlayer struct {
 	gm *GameModel
-	// A 0 value is potentially valid for a score, so use a pointer instead
-	finalScore    *int
+	// A 0 value is a valid for a score, so use a pointer instead
+	finalScore    *int // TODO: Move this into GameModel, can be used with multiplayer
 	height, width int
 }
 

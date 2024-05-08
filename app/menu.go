@@ -86,7 +86,5 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MenuModel) View() string {
-	// FIXME: Styling is center aligned with m.style.Render()
-	// return m.style.Render(m.list.View())
 	return m.list.View()
 }

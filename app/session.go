@@ -17,6 +17,9 @@ func (m *MultiplayerSession) done() <-chan struct{} {
 	return m.ctx.Done()
 }
 
+// Returns the current board state and an ok bool
+// ok bool will fail if the board is inaccessible. (Session is closed or the board pointer is nil)
+// Thread safe, blocks for a mutex lock
 func (m *MultiplayerSession) Board() (board [][]int, ok bool) {
 	select {
 	case <-m.done():
@@ -36,6 +39,7 @@ func (m *MultiplayerSession) Board() (board [][]int, ok bool) {
 	return board, ok
 }
 
+// Thread safe setter. Blocks for mutex.
 func (m *MultiplayerSession) SetBoard(b [][]int) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
@@ -83,7 +87,7 @@ func MatchMultiplayerGames() {
 			default:
 				log.Debug("Exchanging match requests")
 				// FIXME: The sending channels shouldn't be filled anywhere else, but we should still check/handle it if they are
-				// otherwise this will paralyze matchmaking. Also, handle panics here.
+				// otherwise this will hang matchmaking. Also, handle panics here.
 				lastReq.opC <- nextReq.session
 				close(lastReq.opC)
 				nextReq.opC <- lastReq.session
