@@ -8,11 +8,15 @@ type Game struct {
 	pos      Vector
 	height   int
 	width    int
-	Score    int
+	score    int
 	GameOver bool
 }
 
-func newBoard(height, width int) [][]int {
+func (g Game) Score() int {
+	return g.score
+}
+
+func NewBoard(height, width int) [][]int {
 	board := make([][]int, height)
 	blocks := make([]int, height*width)
 
@@ -44,7 +48,7 @@ func (g *Game) nextPieceIfPossible() bool {
 
 func NewGame(height, width int, piece Piece) Game {
 	// Initialize board
-	board := newBoard(height, width)
+	board := NewBoard(height, width)
 
 	g := Game{
 		height:   height,
@@ -80,7 +84,7 @@ func (g Game) colorAt(v Vector) (int, bool) {
 // Returns a [][]int of the board with the piece "colored" in
 func (g Game) Board() [][]int {
 	// make copy of board
-	b := newBoard(g.height, g.width)
+	b := NewBoard(g.height, g.width)
 	for i := range b {
 		copy(b[i], g.board[i])
 	}
@@ -154,7 +158,7 @@ func (g *Game) compactLines() {
 		}
 	}
 
-	g.Score += (2 ^ completedLines*100)
+	g.score += (2 ^ completedLines*100)
 }
 
 func (g *Game) Fall() { // Maybe this should return score as well? idk

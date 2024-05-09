@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"tetrissh/tetris"
 	"time"
 
@@ -57,7 +56,7 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	case FallMsg:
 		m.Fall()
 		if m.GameOver {
-			cmd = GameOverCmd(m.Score)
+			cmd = GameOverCmd(m.Score())
 		} else {
 			cmd = FallTickCmd()
 		}
@@ -79,6 +78,7 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	return m, cmd
 }
 
+// TODO: This doesn't belong here
 func toColor(ci int) lipgloss.Color {
 	c := tetris.Color(ci)
 	var code string
@@ -106,8 +106,8 @@ func toColor(ci int) lipgloss.Color {
 }
 
 func (m GameModel) View() string {
-	board := RenderBoard(m.Board(), m.boardStyle)
+	board := BoardView(m)
+	score := ScoreView(m)
 
-	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.Score))
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }
