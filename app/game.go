@@ -28,25 +28,22 @@ func GameOverCmd(score int) tea.Cmd {
 }
 
 type GameModel struct {
+	*tetris.Game
 	boardStyle boardStyle
 	scoreStyle lipgloss.Style
-	game       tetris.Game
 }
 
 func NewGameModel() GameModel {
+	t := tetris.NewGame(20, 10, tetris.RandomPiece())
+
 	return GameModel{
-		game:       tetris.NewGame(20, 10, tetris.RandomPiece()),
+		Game:       &t,
 		boardStyle: defaultBoardStyle(),
 		scoreStyle: lipgloss.NewStyle().
 			Width(18).
 			Border(lipgloss.NormalBorder(), true).
 			AlignHorizontal(lipgloss.Center),
 	}
-}
-
-// Wrapper around game.Board(), probably a code smell
-func (gm *GameModel) Board() [][]int {
-	return gm.game.Board()
 }
 
 func (m GameModel) Init() tea.Cmd {
@@ -58,24 +55,24 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case FallMsg:
-		m.game.Fall()
-		if m.game.GameOver {
-			cmd = GameOverCmd(m.game.Score)
+		m.Fall()
+		if m.GameOver {
+			cmd = GameOverCmd(m.Score)
 		} else {
 			cmd = FallTickCmd()
 		}
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "h", "left":
-			m.game.Act(tetris.ActionLeft)
+			m.Act(tetris.ActionLeft)
 		case "l", "right":
-			m.game.Act(tetris.ActionRight)
+			m.Act(tetris.ActionRight)
 		case "j", "down":
-			m.game.Act(tetris.ActionDown)
+			m.Act(tetris.ActionDown)
 		case "k", "r", "up":
-			m.game.Act(tetris.ActionRotate)
+			m.Act(tetris.ActionRotate)
 		case " ":
-			m.game.Act(tetris.ActionDrop)
+			m.Act(tetris.ActionDrop)
 		}
 	}
 
@@ -111,6 +108,6 @@ func toColor(ci int) lipgloss.Color {
 func (m GameModel) View() string {
 	board := RenderBoard(m.Board(), m.boardStyle)
 
-	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.game.Score))
+	score := m.scoreStyle.Render(fmt.Sprintf("Score: %v", m.Score))
 	return lipgloss.JoinVertical(lipgloss.Center, score, board)
 }
