@@ -137,7 +137,7 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			select {
 			case s, ok := <-m.opC:
 				if !ok {
-					log.Warn("Tried to read from a closed opC on a MatchLook msg")
+					log.Error("Tried to read from a closed opC on a MatchLook msg")
 					// TODO: Return error msg cmd here
 					return m, nil
 				} else {

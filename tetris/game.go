@@ -207,6 +207,3 @@ func (g *Game) Act(a Action) {
 		g.drop()
 	}
 }
-
-// func (b BoardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {}
-// func (m BoardModel) View() string {}

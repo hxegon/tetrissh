@@ -16,22 +16,16 @@ type GameModel struct {
 func NewGameModel() GameModel {
 	t := tetris.NewGame(20, 10, tetris.RandomPiece())
 
-	return GameModel{
-		Game: &t,
-	}
+	return GameModel{Game: &t}
 }
 
 type FallMsg struct{}
 
 func FallTickCmd() tea.Cmd {
-	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return FallMsg{}
-	})
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg { return FallMsg{} })
 }
 
-func (m GameModel) Init() tea.Cmd {
-	return FallTickCmd()
-}
+func (m GameModel) Init() tea.Cmd { return FallTickCmd() }
 
 func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	var cmd tea.Cmd
