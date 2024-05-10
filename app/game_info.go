@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"strings"
+	"tetrissh/tetris"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,6 +21,32 @@ type GameInfo interface {
 	Board() [][]int
 	Score() int
 	// TODO: GameState?
+}
+
+func toColor(ci int) lipgloss.Color {
+	c := tetris.Color(ci)
+	var code string
+
+	switch c {
+	case tetris.ColorEmpty:
+		code = "240"
+	case tetris.ColorRed:
+		code = "001"
+	case tetris.ColorBlue:
+		code = "004"
+	case tetris.ColorGreen:
+		code = "002"
+	case tetris.ColorOrange:
+		code = "202"
+	case tetris.ColorPurple:
+		code = "129"
+	case tetris.ColorYellow:
+		code = "011"
+	default:
+		// TODO: Don't use panic for error handling, maybe an Error()?
+		panic("Trying to convert an int to a color but there were no matching colors")
+	}
+	return lipgloss.Color(code)
 }
 
 func BoardView(g GameInfo) string {

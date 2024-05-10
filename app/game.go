@@ -71,33 +71,6 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	return m, cmd
 }
 
-// TODO: This doesn't belong here
-func toColor(ci int) lipgloss.Color {
-	c := tetris.Color(ci)
-	var code string
-
-	switch c {
-	case tetris.ColorEmpty:
-		code = "240"
-	case tetris.ColorRed:
-		code = "001"
-	case tetris.ColorBlue:
-		code = "004"
-	case tetris.ColorGreen:
-		code = "002"
-	case tetris.ColorOrange:
-		code = "202"
-	case tetris.ColorPurple:
-		code = "129"
-	case tetris.ColorYellow:
-		code = "011"
-	default:
-		// TODO: Don't use panic for error handling, maybe an Error()?
-		panic("Trying to convert an int to a color but there were no matching colors")
-	}
-	return lipgloss.Color(code)
-}
-
 func (m GameModel) View() string {
 	board := BoardView(m)
 	score := ScoreView(m)
