@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/charmbracelet/log"
@@ -11,32 +12,35 @@ type MultiplayerSession struct {
 	ctx   context.Context
 	board *[][]int
 	mx    *sync.RWMutex
+	err   error
 }
 
 func (m *MultiplayerSession) done() <-chan struct{} {
 	return m.ctx.Done()
 }
 
-// Returns the current board state and an ok bool
-// ok bool will fail if the board is inaccessible. (Session is closed or the board pointer is nil)
+// Returns the current board state. Errors are logged on MultiplayerSession.
 // Thread safe, blocks for a mutex lock
-func (m *MultiplayerSession) Board() (board [][]int, ok bool) {
+func (m *MultiplayerSession) Board() (board [][]int) {
 	select {
 	case <-m.done():
-		ok = false
+		msg := "tried to access a board pointer in a canceled MultiplayerSession"
+		log.Error(msg)
+		m.err = errors.New(msg)
 	default:
 		if m.board == nil {
-			log.Warn("session context wasn't closed but board pointer was nil")
-			ok = false
+			msg := "MultiplayerSession wasn't canceled but board pointer was nil"
+			log.Error(msg)
+			m.err = errors.New(msg)
 		} else {
 			m.mx.RLock()
 			defer m.mx.RUnlock()
 
 			board = *m.board
-			ok = true
 		}
 	}
-	return board, ok
+
+	return board
 }
 
 // Thread safe setter. Blocks for mutex.

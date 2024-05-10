@@ -171,14 +171,15 @@ func (m MultiplayerGame) View() string {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
-		if b, ok := m.opSession.Board(); ok {
+		b := m.opSession.Board()
+		if m.opSession.err != nil {
+			panic("couldn't get board")
+		} else {
 			return lipgloss.JoinHorizontal(
 				lipgloss.Left,
 				m.game.View(),
 				RenderBoard(b, defaultBoardStyle()),
 			)
-		} else {
-			panic("couldn't get board")
 		}
 	case msCanceled:
 		return "match canceled"
