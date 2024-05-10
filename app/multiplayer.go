@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -35,7 +36,7 @@ type MultiplayerGame struct {
 	cancel    context.CancelFunc
 	session   *MultiplayerSession
 	opSession *MultiplayerSession
-	opC       <-chan *MultiplayerSession
+	opC       <-chan *MultiplayerSession // Channel for the matchmaking goroutine to send the opponent to
 	game      *GameModel
 	mstate    matchState
 }
@@ -69,7 +70,7 @@ func NewMultiplayer() *MultiplayerGame {
 func (m *MultiplayerGame) close() {
 	log.Debug("Closing game")
 	m.cancel()
-	// drop pointers
+	// drop shared pointers, might not be necessary
 	m.opSession = nil
 	m.session = nil
 }
@@ -171,16 +172,18 @@ func (m MultiplayerGame) View() string {
 	case msLooking:
 		return "looking for match"
 	case msRunning:
-		b := m.opSession.Board()
-		if m.opSession.err != nil {
-			panic("couldn't get board")
-		} else {
-			return lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				m.game.View(),
-				RenderBoard(b, defaultBoardStyle()),
-			)
+		if err := m.opSession.err; err != nil {
+			// TODO: Render error message
+			msg := fmt.Sprintf("Error when trying to view an opSession: %v", err)
+			log.Errorf(msg)
+			panic(msg) // TODO: just display the message
 		}
+
+		return lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			BoardView(m.game),
+			BoardView(m.opSession),
+		)
 	case msCanceled:
 		return "match canceled"
 	default:

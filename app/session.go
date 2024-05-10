@@ -19,11 +19,13 @@ func (m *MultiplayerSession) done() <-chan struct{} {
 	return m.ctx.Done()
 }
 
+/*** GAMEINFO INTERFACE ***/
+
 // Returns the current board state. Errors are logged on MultiplayerSession.
 // Thread safe, blocks for a mutex lock
 func (m *MultiplayerSession) Board() (board [][]int) {
 	select {
-	case <-m.done():
+	case <-m.done(): // TODO: Should this actually be an error?
 		msg := "tried to access a board pointer in a canceled MultiplayerSession"
 		log.Error(msg)
 		m.err = errors.New(msg)
@@ -43,13 +45,20 @@ func (m *MultiplayerSession) Board() (board [][]int) {
 	return board
 }
 
+func (m *MultiplayerSession) Score() int {
+	return 0
+}
+
 // Thread safe setter. Blocks for mutex.
+// TODO: Should error when trying to do this on a canceled session
 func (m *MultiplayerSession) SetBoard(b [][]int) {
 	m.mx.Lock()
 	defer m.mx.Unlock()
 
 	m.board = &b
 }
+
+/*** MATCHMAKING ***/
 
 type matchReq struct {
 	session *MultiplayerSession
