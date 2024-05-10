@@ -115,7 +115,7 @@ func (m *MultiplayerGame) SetBoard() {
 type MatchLookTickMsg struct{}
 
 func MatchLookTick() tea.Cmd {
-	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg {
 		return MatchLookTickMsg{}
 	})
 }
