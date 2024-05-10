@@ -28,20 +28,13 @@ func GameOverCmd(score int) tea.Cmd {
 
 type GameModel struct {
 	*tetris.Game
-	boardStyle boardStyle
-	scoreStyle lipgloss.Style
 }
 
 func NewGameModel() GameModel {
 	t := tetris.NewGame(20, 10, tetris.RandomPiece())
 
 	return GameModel{
-		Game:       &t,
-		boardStyle: defaultBoardStyle(),
-		scoreStyle: lipgloss.NewStyle().
-			Width(18).
-			Border(lipgloss.NormalBorder(), true).
-			AlignHorizontal(lipgloss.Center),
+		Game: &t,
 	}
 }
 
