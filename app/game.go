@@ -8,24 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type FallMsg struct{}
-
-func FallTickCmd() tea.Cmd {
-	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return FallMsg{}
-	})
-}
-
-type GameOverMsg struct {
-	Score int
-}
-
-func GameOverCmd(score int) tea.Cmd {
-	return func() tea.Msg {
-		return GameOverMsg{Score: score}
-	}
-}
-
+// Core bubbletea model that wraps the tetris game as thinly as possible.
 type GameModel struct {
 	*tetris.Game
 }
@@ -38,6 +21,14 @@ func NewGameModel() GameModel {
 	}
 }
 
+type FallMsg struct{}
+
+func FallTickCmd() tea.Cmd {
+	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
+		return FallMsg{}
+	})
+}
+
 func (m GameModel) Init() tea.Cmd {
 	return FallTickCmd()
 }
@@ -48,9 +39,7 @@ func (m GameModel) Update(msg tea.Msg) (GameModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case FallMsg:
 		m.Fall()
-		if m.GameOver {
-			cmd = GameOverCmd(m.Score())
-		} else {
+		if !m.GameOver {
 			cmd = FallTickCmd()
 		}
 	case tea.KeyMsg:

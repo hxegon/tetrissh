@@ -8,9 +8,6 @@ import (
 
 type SinglePlayer struct {
 	gm *GameModel
-	// A 0 value is a valid for a score, so use a pointer instead
-	finalScore    *int // TODO: Move this into GameModel, can be used with multiplayer
-	height, width int
 }
 
 func NewSinglePlayer() SinglePlayer {
@@ -27,9 +24,6 @@ func (s SinglePlayer) Init() tea.Cmd {
 
 func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 	switch msg := msg.(type) {
-	case GameOverMsg:
-		s.finalScore = &msg.Score
-		return s, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
@@ -42,9 +36,9 @@ func (s SinglePlayer) Update(msg tea.Msg) (m tea.Model, cmd tea.Cmd) {
 }
 
 func (s SinglePlayer) View() string {
-	if s.finalScore == nil {
-		return s.gm.View()
+	if s.gm.GameOver {
+		return fmt.Sprintf("Your final score is %v! Press q to go back to menu", s.gm.Score())
 	} else {
-		return fmt.Sprintf("Your final score is %v! Press q to go back to menu", *s.finalScore)
+		return s.gm.View()
 	}
 }
