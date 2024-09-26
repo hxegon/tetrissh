@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -38,6 +39,7 @@ type MultiplayerGame struct {
 	opSession *MultiplayerSession
 	opC       <-chan *MultiplayerSession // Channel for the matchmaking goroutine to send the opponent to
 	game      *GameModel
+	scoreBar  *progress.Model
 	mstate    matchState
 }
 
@@ -45,6 +47,7 @@ func NewMultiplayer() *MultiplayerGame {
 	ctx, cancel := context.WithCancel(context.Background())
 	var board *[][]int
 
+	// TODO: NewMultiplayerSession
 	session := &MultiplayerSession{
 		ctx:   ctx,
 		board: board,
@@ -57,11 +60,17 @@ func NewMultiplayer() *MultiplayerGame {
 
 	opC := session.requestMatch()
 
+	scoreM := progress.New(
+		progress.WithGradient("#030ffc", "#fa0202"),
+		progress.WithoutPercentage(),
+	)
+
 	game := &MultiplayerGame{
-		session: session,
-		cancel:  cancel,
-		opC:     opC,
-		game:    &gm,
+		session:  session,
+		cancel:   cancel,
+		scoreBar: &scoreM,
+		opC:      opC,
+		game:     &gm,
 	}
 
 	return game
@@ -166,6 +175,46 @@ func (m MultiplayerGame) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// Returns a # between 0.0 <-> 1.0 representing the ration between this player's score and the other
+// Returns 0.5, err if we can't get score.
+func (m *MultiplayerGame) scoreRatio() (float64, error) {
+	if m.session == nil || m.opSession == nil {
+		msg := "Tried to call scorePercent on a game with a nil session or opSession pointer"
+		return 0.5, fmt.Errorf(msg)
+	}
+
+	score := m.session.Score()
+	opScore := m.opSession.Score()
+
+	if score+opScore == 0 { // Ratio is "even" if both scores are 0. Guard against Div by 0
+		return 0.5, nil
+	}
+
+	return float64(score) / float64(score+opScore), nil
+}
+
+func (m *MultiplayerGame) renderGame() string {
+	// Layout is as such:
+	// Score bar
+	// Your score | Their score
+	// Your Board | Their board
+	boardsView := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		BoardView(m.game),
+		BoardView(m.opSession),
+	)
+
+	boardW := lipgloss.Width(boardsView)
+	m.scoreBar.Width = boardW
+
+	if r, err := m.scoreRatio(); err != nil {
+		panic(err)
+	} else {
+		scoreView := m.scoreBar.ViewAs(r)
+		return lipgloss.JoinVertical(lipgloss.Left, scoreView, boardsView)
+	}
+}
+
 func (m MultiplayerGame) View() string {
 	m.setState()
 	switch m.mstate {
@@ -178,12 +227,8 @@ func (m MultiplayerGame) View() string {
 			log.Errorf(msg)
 			panic(msg) // TODO: just display the message
 		}
+		return m.renderGame()
 
-		return lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			BoardView(m.game),
-			BoardView(m.opSession),
-		)
 	case msCanceled:
 		return "match canceled"
 	default:

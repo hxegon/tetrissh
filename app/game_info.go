@@ -43,7 +43,7 @@ func toColor(ci int) lipgloss.Color {
 	case tetris.ColorYellow:
 		code = "011"
 	default:
-		// TODO: Don't use panic for error handling, maybe an Error()?
+		// TODO: Only panic in development mode
 		panic("Trying to convert an int to a color but there were no matching colors")
 	}
 	return lipgloss.Color(code)

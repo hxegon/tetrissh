@@ -11,6 +11,7 @@ import (
 type MultiplayerSession struct {
 	ctx   context.Context
 	board *[][]int
+	score *int
 	mx    *sync.RWMutex
 	err   error
 }
@@ -22,31 +23,27 @@ func (m *MultiplayerSession) done() <-chan struct{} {
 /*** GAMEINFO INTERFACE ***/
 
 // Returns the current board state. Errors are logged on MultiplayerSession.
-// Thread safe, blocks for a mutex lock
+// Thread safe, blocks for a mutex rlock
 func (m *MultiplayerSession) Board() (board [][]int) {
 	select {
-	case <-m.done(): // TODO: Should this actually be an error?
+	case <-m.done(): // TODO: Should we care if the context is canceled?
 		msg := "tried to access a board pointer in a canceled MultiplayerSession"
 		log.Error(msg)
 		m.err = errors.New(msg)
 	default:
+		m.mx.RLock()
+		defer m.mx.RUnlock()
+
 		if m.board == nil {
 			msg := "MultiplayerSession wasn't canceled but board pointer was nil"
 			log.Error(msg)
 			m.err = errors.New(msg)
 		} else {
-			m.mx.RLock()
-			defer m.mx.RUnlock()
-
 			board = *m.board
 		}
 	}
 
 	return board
-}
-
-func (m *MultiplayerSession) Score() int {
-	return 0
 }
 
 // Thread safe setter. Blocks for mutex.
@@ -57,6 +54,21 @@ func (m *MultiplayerSession) SetBoard(b [][]int) {
 
 	m.board = &b
 }
+
+// Returns 0 if score isn't set, otherwise returns score value for session
+// THREAD SAFE.
+func (m *MultiplayerSession) Score() int {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+
+	if m.score != nil {
+		return *m.score
+	}
+	return 0
+}
+
+// func (m *MultiplayerSession) SetScore() int {
+// }
 
 /*** MATCHMAKING ***/
 
@@ -95,12 +107,11 @@ func MatchMultiplayerGames() {
 				close(lastReq.opC)
 				*lastReq = nextReq
 			case <-nextReq.session.done():
-				// Skip this request if context is canceled
-				continue
+				close(nextReq.opC)
+				continue // Skip this request if context is canceled
 			default:
 				log.Debug("Exchanging match requests")
-				// FIXME: The sending channels shouldn't be filled anywhere else, but we should still check/handle it if they are
-				// otherwise this will hang matchmaking. Also, handle panics here.
+				// the sessions have a <-chan, so we don't have to worry about them already being filled here
 				lastReq.opC <- nextReq.session
 				close(lastReq.opC)
 				nextReq.opC <- lastReq.session
